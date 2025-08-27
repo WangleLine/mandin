@@ -362,10 +362,10 @@
             height:size.h,
             bottom:"2px",
             onresize: (w, h) => {
-                Settings.saveWindowWH("room", w, h)
+                Settings.saveWindowWH("room", w, h);
             },
             onmove: (x, y) => {
-                Settings.saveWindowXY("room", x, y)
+                Settings.saveWindowXY("room", x, y);
             }
         });
     }
@@ -461,7 +461,7 @@
         
         for (let i = 0; i < roomLayers.length; i++) {
             if (roomLayers[i].layer == Layers.currentLayer) {
-                roomLayers[i].getContext("2d").clearRect(x * tilesetData.tileWidth, y * tilesetData.tileHeight, tilesetData.tileWidth, tilesetData.tileWidth);
+                roomLayers[i].getContext("2d").clearRect(x * tilesetData.tileWidth, y * tilesetData.tileHeight, tilesetData.tileWidth, tilesetData.tileHeight);
                 drawTile(roomLayers[i].tileset_image, roomLayers[i].getContext("2d"), tile, x, y, tilesetData.tileWidth, tilesetData.tileHeight);
                 break;
             }
@@ -474,7 +474,7 @@
         Layers.currentLayer.tiles["TileCompressedData"][index] = 0;
         for (let i = 0; i < roomLayers.length; i++) {
             if (roomLayers[i].layer == Layers.currentLayer) {
-                roomLayers[i].getContext("2d").clearRect(x * tilesetData.tileWidth, y * tilesetData.tileHeight, tilesetData.tileWidth, tilesetData.tileWidth);
+                roomLayers[i].getContext("2d").clearRect(x * tilesetData.tileWidth, y * tilesetData.tileHeight, tilesetData.tileWidth, tilesetData.tileHeight);
                 break;
             }
         }
