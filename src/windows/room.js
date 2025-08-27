@@ -209,7 +209,13 @@
         render();
 
         openWindow();
-        winbox.onresize = () => {
+        // Preserve any existing onresize handler (which saves window size)
+        const _prevWinboxOnResize = winbox.onresize;
+        winbox.onresize = (w, h) => {
+            if (typeof _prevWinboxOnResize === 'function') {
+                try { _prevWinboxOnResize(w, h); } catch (e) { /* ignore */ }
+            }
+            // Update the internal canvas size to match the new window client area
             outputCanvas.width = outputCanvas.parentElement.clientWidth;
             outputCanvas.height = outputCanvas.parentElement.clientHeight;
             outctx.imageSmoothingEnabled = false;
@@ -355,6 +361,7 @@
             mount: document.querySelector("div.wb#roomEditor"),
             onclose: () => {
                 open = false;
+                Settings.saveWindowXYWH("room", winbox.x, winbox.y, winbox.width, winbox.height);
             },
             x:size.x,
             y:size.y,
@@ -362,10 +369,10 @@
             height:size.h,
             bottom:"2px",
             onresize: (w, h) => {
-                Settings.saveWindowWH("room", w, h);
+                Settings.saveWindowWH("room", w, h)
             },
             onmove: (x, y) => {
-                Settings.saveWindowXY("room", x, y);
+                Settings.saveWindowXY("room", x, y)
             }
         });
     }
