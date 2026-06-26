@@ -196,13 +196,15 @@
             }
         }
 
-        // outline around the room bounds
+        // outline around the room bounds (save/restore so lineWidth/strokeStyle don't leak into the overlays below)
         if (roomData != null && roomData.roomSettings != null) {
             let rw = roomData.roomSettings.Width;
             let rh = roomData.roomSettings.Height;
+            outctx.save();
             outctx.strokeStyle = "#ffffff40";
             outctx.lineWidth = 1 / outctx.getTransform().a; // keep it 1px ish even if zoomy
             outctx.strokeRect(0, 0, rw, rh);
+            outctx.restore();
         }
 
         if (Layers.onTileLayer() && tilesetData != null && tilesetImage != null) {
