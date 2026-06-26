@@ -2,7 +2,6 @@
     let Room = {};
     let open = false;
     let roomData = null;
-    let roomPath = null;
     let tilesetData = null;
     let tilesetImage = null;
     let brushSize = 1;
@@ -119,8 +118,6 @@
         }
         Layers.buildList(_roomData);
 
-        dx = 0;
-        dy = 0;
         roomData = _roomData;
         let layers = roomData.layers;
         
