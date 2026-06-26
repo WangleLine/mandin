@@ -121,6 +121,21 @@ input[type="radio"]:hover {
     max-width: 24px;
 }
 
+#roompickerlist .listOption {
+    height: 38px;
+}
+
+#roompickerlist .listOption img.roomthumb {
+    width: 72px;
+    height: 32px;
+    max-width: 72px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    background-color: #000;
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
 
 .wb-body {
     background-color: var(--dark-color);

@@ -164,6 +164,112 @@
         }
     }
 
+    function drawThumbnailTiles(ctx, layer, tileset_data, tileset_image) {
+        let tiles = layer.tiles["TileCompressedData"];
+        let serialiseWidth = layer.tiles.SerialiseWidth;
+        let pos = 0, x = 0, y = 0;
+        function place(tile) {
+            // tile index 0 (masking off the flip/rotate flags) means empty - skip it
+            if ((tile & 262143) !== 0) {
+                drawTile(tileset_image, ctx, tile, x, y, tileset_data.tileWidth, tileset_data.tileHeight);
+            }
+            x += 1;
+            if (x >= serialiseWidth) { x = 0; y += 1; }
+        }
+        while (pos < tiles.length) {
+            if (tiles[pos] < 0) {
+                let rep = tiles[pos] * -1;
+                pos += 1;
+                for (let n = 0; n < rep; n++) place(tiles[pos]);
+                pos += 1;
+            } else {
+                let rep = tiles[pos];
+                pos += 1;
+                for (let n = 0; n < rep; n++) { place(tiles[pos]); pos += 1; }
+            }
+        }
+    }
+
+    // Renders roomData to a small thumbnail data-URL
+    // Self contained: it does not touch any of the module state used by the live editor (tilesetData, roomLayers etcc)
+    function renderThumbnail(roomData, maxSize, callback) {
+        if (roomData == null || roomData.roomSettings == null || roomData.layers == null) { callback(null); return; }
+        let width = roomData.roomSettings.Width;
+        let height = roomData.roomSettings.Height;
+        if (!(width > 0) || !(height > 0)) { callback(null); return; }
+
+        // Render straight into a small, scaled-down canvas.
+        // Rooms can be thousands of pixels across, so never allocate a full room-resolution bitmap
+        let scale = Math.min(maxSize / width, maxSize / height, 1);
+        let cnv = document.createElement("canvas");
+        cnv.width = Math.max(1, Math.round(width * scale));
+        cnv.height = Math.max(1, Math.round(height * scale));
+        let ctx = cnv.getContext("2d");
+        ctx.scale(scale, scale);
+
+        // draw back-to-front (higher depth = further back)
+        let layers = roomData.layers.slice().sort((a, b) => b.depth - a.depth);
+
+        let pending = 1;
+        let finished = false;
+        function finish() {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            callback(cnv.toDataURL());
+        }
+        function done() {
+            pending -= 1;
+            if (pending <= 0) finish();
+        }
+        // safety net for objects without sprites (they dont callback)
+        let timer = setTimeout(finish, 5000);
+
+        for (let layer of layers) {
+            if (layer.visible === false) continue;
+
+            if (layer["$GMRBackgroundLayer"] != null && layer.colour != null) {
+                ctx.fillStyle = Util.abgrToRGBA(layer.colour);
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            if (layer["$GMRTileLayer"] != null && layer.tilesetId != null) {
+                pending += 1;
+                GMF.getAssetData(layer.tilesetId.name, (tileset_data) => {
+                    GMF.getObjectSprite(layer.tilesetId.name, (sprite_data) => {
+                        Util.loadImage(sprite_data.img_path, (tileset_image) => {
+                            drawThumbnailTiles(ctx, layer, tileset_data, tileset_image);
+                            done();
+                        });
+                    });
+                });
+            }
+
+            if (layer["$GMRInstanceLayer"] != null) {
+                let count = 0;
+                for (let inst of layer.instances) {
+                    if (count++ >= 500) break; // don't choke on disgustingly large rooms
+                    pending += 1;
+                    GMF.getObjectSprite(inst.objectId.name, (sprite_data) => {
+                        Util.loadImage(sprite_data.img_path, (img) => {
+                            ctx.drawImage(
+                                img,
+                                inst.x - sprite_data.data.sequence.xorigin,
+                                inst.y - sprite_data.data.sequence.yorigin,
+                                sprite_data.data.width * inst.scaleX,
+                                sprite_data.data.height * inst.scaleY
+                            );
+                            done();
+                        });
+                    });
+                }
+            }
+        }
+
+        done(); // release the initial guard
+    }
+    Room.renderThumbnail = renderThumbnail;
+
     function loadRoom(_roomData) {
         let lastTransform = null;
         if (outctx != null) {
