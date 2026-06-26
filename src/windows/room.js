@@ -452,16 +452,21 @@
         }
     });
 
+    function tileInBounds(x, y) {
+        if (x < 0 || x >= Layers.currentLayer.tiles.SerialiseWidth) return false;
+        if (y < 0 || y >= Layers.currentLayer.tiles.SerialiseHeight) return false;
+        return true;
+    }
+
     function getTile(x, y) {
+        // make sure OOB reads don't wrap onto different rows
+        if (!tileInBounds(x, y)) return 0;
         return Layers.currentLayer.tiles["TileCompressedData"][1 + x + y * Layers.currentLayer.tiles.SerialiseWidth];
     }
 
     let lastdrawpos = {x:-1, y:-1};
     function paintTile(x, y, tile) {
-        if (x >= Layers.currentLayer.tiles.SerialiseWidth) return;
-        if (x < 0) return;
-        if (y >= Layers.currentLayer.tiles.SerialiseHeight) return;
-        if (y < 0) return;
+        if (!tileInBounds(x, y)) return;
         let index = x + y * Layers.currentLayer.tiles.SerialiseWidth;
         index += 1;
         Layers.currentLayer.tiles["TileCompressedData"][index] = tile;
@@ -476,6 +481,7 @@
     }
 
     function deleteTile(x, y) {
+        if (!tileInBounds(x, y)) return;
         let index = x + y * Layers.currentLayer.tiles.SerialiseWidth;
         index += 1;
         Layers.currentLayer.tiles["TileCompressedData"][index] = 0;
