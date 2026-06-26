@@ -222,9 +222,6 @@
     // Self contained: it does not touch any of the module state used by the live editor (tilesetData, roomLayers etcc)
     function renderThumbnail(roomData, maxSize, callback) {
         if (roomData == null || roomData.roomSettings == null || roomData.layers == null) { callback(null); return; }
-        let width = roomData.roomSettings.Width;
-        let height = roomData.roomSettings.Height;
-        if (!(width > 0) || !(height > 0)) { callback(null); return; }
         let roomW = roomData.roomSettings.Width;
         let roomH = roomData.roomSettings.Height;
         if (!(roomW > 0) || !(roomH > 0)) { callback(null); return; }
@@ -255,6 +252,14 @@
                 }
             }
 
+            if (!(maxX > minX) || !(maxY > minY)) {
+                // no tile/instance content - fall back to the whole room
+                minX = 0; minY = 0; maxX = roomW; maxY = roomH;
+            } else {
+                // a little breathing room around the content
+                let pad = Math.max(maxX - minX, maxY - minY) * 0.04;
+                minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+            }
 
             let cropW = maxX - minX;
             let cropH = maxY - minY;
