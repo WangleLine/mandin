@@ -132,7 +132,7 @@
         try {
             GMF.getRoomData(room, (data) => {
                 try {
-                    Room.renderThumbnail(data, 128, (url) => {
+                    RoomThumbnail.render(data, 128, (url) => {
                         if (url != null) {
                             thumbnailCache[room] = url;
                             if (img.isConnected) img.src = url;
