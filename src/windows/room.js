@@ -426,6 +426,15 @@
             }
         }
 
+        // outline around the room bounds
+        if (roomData != null && roomData.roomSettings != null) {
+            let rw = roomData.roomSettings.Width;
+            let rh = roomData.roomSettings.Height;
+            outctx.strokeStyle = "#ffffff40";
+            outctx.lineWidth = 1 / outctx.getTransform().a; // keep it 1px ish even if zoomy
+            outctx.strokeRect(0, 0, rw, rh);
+        }
+
         if (Layers.onTileLayer() && tilesetData != null && tilesetImage != null) {
             let off = Math.floor(brushSize/2);
             for (let i = 0; i < brushSize; i++) {
