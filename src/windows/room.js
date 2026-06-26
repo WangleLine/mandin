@@ -721,15 +721,16 @@
                 for (let inst of instanceSelection) {
                     let removeIndex = Layers.currentLayer.instances.indexOf(inst.instanceData);
                     
-                    let removed = Layers.currentLayer.instances.splice(removeIndex, 1);
-                    
+                    let removed = Layers.currentLayer.instances.splice(removeIndex, 1)[0];
+
+                    let creationIndex = -1;
                     for (let i = 0; i < roomData.instanceCreationOrder.length; i++) {
                         if (roomData.instanceCreationOrder[i].name == removed.name) {
-                            removeIndex = i;
+                            creationIndex = i;
                             break;
                         }
                     }
-                    roomData.instanceCreationOrder.splice(removeIndex, 1);
+                    if (creationIndex != -1) roomData.instanceCreationOrder.splice(creationIndex, 1);
                 }
                 instanceSelection = [];
                 reRenderCurrentLayer();
