@@ -19,20 +19,6 @@
 
     Room.getInstances = () => { return instances };
 
-    function drawTile(src, dest, index, x, y, tileWidth, tileHeight)
-    {
-        // the transforms aren't working
-
-        // let mirrored = index & (1 << 28) != 0;
-        // let flipped = index & (1 << 29) != 0;
-        // let rotated = index & (1 << 30) != 0;
-        index &= 262143;
-        let ix = index % (src.naturalWidth/tileWidth);
-        let iy = Math.floor(index / (src.naturalWidth/tileWidth));
-        let sx = ix * tileWidth;
-        dest.drawImage(src, sx, iy * tileHeight, tileWidth, tileHeight, x * tileWidth, y * tileHeight, tileWidth, tileHeight);
-    }
-
     function drawLayer(ctx, layer) {
         if (layer["$GMRTileLayer"] != null) {
             let tileArraySize = layer.tiles.SerialiseWidth * layer.tiles.SerialiseHeight;
@@ -58,7 +44,7 @@
                                 let rep = tiles[pos] * -1;
                                 pos += 1;
                                 for (let n = 0; n < rep; n++) {
-                                    drawTile(tileset_image, ctx, tiles[pos], x, y, tileset_data.tileWidth, tileset_data.tileHeight);
+                                    Util.drawTile(tileset_image, ctx, tiles[pos], x, y, tileset_data.tileWidth, tileset_data.tileHeight);
                                     newTileArray.push(tiles[pos]);
                                     x += 1;
                                     if (x >= layer.tiles.SerialiseWidth) {
@@ -71,7 +57,7 @@
                                 let rep = tiles[pos];
                                 pos += 1;
                                 for (let n = 0; n < rep; n++) {
-                                    drawTile(tileset_image, ctx, tiles[pos], x, y, tileset_data.tileWidth, tileset_data.tileHeight);
+                                    Util.drawTile(tileset_image, ctx, tiles[pos], x, y, tileset_data.tileWidth, tileset_data.tileHeight);
                                     newTileArray.push(tiles[pos]);
                                     pos += 1;
                                     x += 1;
@@ -439,7 +425,7 @@
             let off = Math.floor(brushSize/2);
             for (let i = 0; i < brushSize; i++) {
                 for (let j = 0; j < brushSize; j++) {
-                    drawTile(tilesetImage, outctx, TilePicker.getCurrentTile(mouseTile.x + mouseTile.y * (j+2) * (i+2)), -off + mouseTile.x + i, -off + mouseTile.y + j, tilesetData.tileWidth, tilesetData.tileHeight);
+                    Util.drawTile(tilesetImage, outctx, TilePicker.getCurrentTile(mouseTile.x + mouseTile.y * (j+2) * (i+2)), -off + mouseTile.x + i, -off + mouseTile.y + j, tilesetData.tileWidth, tilesetData.tileHeight);
                 }
             }
         }
@@ -661,7 +647,7 @@
         for (let i = 0; i < roomLayers.length; i++) {
             if (roomLayers[i].layer == Layers.currentLayer) {
                 roomLayers[i].getContext("2d").clearRect(x * tilesetData.tileWidth, y * tilesetData.tileHeight, tilesetData.tileWidth, tilesetData.tileHeight);
-                drawTile(roomLayers[i].tileset_image, roomLayers[i].getContext("2d"), tile, x, y, tilesetData.tileWidth, tilesetData.tileHeight);
+                Util.drawTile(roomLayers[i].tileset_image, roomLayers[i].getContext("2d"), tile, x, y, tilesetData.tileWidth, tilesetData.tileHeight);
                 break;
             }
         }

@@ -25,6 +25,15 @@
         return newImage;
     }
 
+    // draws a single tile (by index) from a tileset image at tile-grid
+    Util.drawTile = function(src, dest, index, x, y, tileWidth, tileHeight) {
+        index &= 262143; // mask off the flip/mirror/rotate flags
+        let perRow = src.naturalWidth / tileWidth;
+        let ix = index % perRow;
+        let iy = Math.floor(index / perRow);
+        dest.drawImage(src, ix * tileWidth, iy * tileHeight, tileWidth, tileHeight, x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+    }
+
     Util.abgrToRGBA = function(abgr) {
         let r = ((abgr) % 0x100).toString(16);
         let g = (Math.floor(abgr / 0x100) % 0x100).toString(16);
