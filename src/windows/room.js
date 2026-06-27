@@ -9,6 +9,7 @@
     let outputCanvas = null;
     let outctx = null;
     let selectedInstancePreview = null;
+    let pendingFit = false; // request a zoom-to-fit once the canvas has a real size
 
     let rv = document.querySelector("div.wb#roomViewer");
 
@@ -165,14 +166,33 @@
             outputCanvas.height = outputCanvas.parentElement.clientHeight;
             outctx.imageSmoothingEnabled = false;
         }
-        moveView((outputCanvas.width - roomLayers[0].width)/2, (outputCanvas.height - roomLayers[0].height)/2);
-        if (lastTransform != null) outctx.setTransform(lastTransform);
+        if (lastTransform != null) {
+            outctx.setTransform(lastTransform);
+            pendingFit = false;
+        } else {
+            // zoom so the room almsot fills the view on first mandin load
+            pendingFit = true;
+            fitRoomToView();
+        }
 
         onLayerSwitch();
         setMaxUniqueIndex();
         document.querySelector("#btn_roomreload").addEventListener("click", reload);
     }
     Room.loadRoom = loadRoom;
+
+    // center the room and scale it so it aaaalmost fills the view
+    function fitRoomToView() {
+        if (roomLayers.length == 0) return;
+        let roomW = roomLayers[0].width;
+        let roomH = roomLayers[0].height;
+        if (!(roomW > 0) || !(roomH > 0)) return;
+        if (!(outputCanvas.width > 0) || !(outputCanvas.height > 0)) return; // size not ready yet
+        let scale = Math.min(outputCanvas.width / roomW, outputCanvas.height / roomH) * 0.95;
+        outctx.setTransform(scale, 0, 0, scale,
+            (outputCanvas.width - roomW * scale) / 2,
+            (outputCanvas.height - roomH * scale) / 2);
+    }
 
     function render() {
         if (outputCanvas.width == 0) {
