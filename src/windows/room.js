@@ -202,6 +202,12 @@
             moveView((outputCanvas.width - roomLayers[0].width)/2, (outputCanvas.height - roomLayers[0].height)/2);
         }
 
+        // apply  zoom once the canvas finally has a real size
+        if (pendingFit && outputCanvas.width > 0) {
+            fitRoomToView();
+            pendingFit = false;
+        }
+
         let t = outctx.getTransform();
         outctx.resetTransform();
         outctx.clearRect(0, 0, outctx.canvas.width, outctx.canvas.height);
