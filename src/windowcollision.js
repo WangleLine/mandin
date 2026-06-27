@@ -3,12 +3,10 @@
 
     // Make windows "crash into" each other when you drag a resize handle
 
-
-
     function rectOf(box) { return { x: box.x, y: box.y, w: box.width, h: box.height }; }
     function valid(b, box) { return b !== box && !b.min && !b.max && !b.hidden && b.g; }
 
-    // The fixed top mneu bar is a wall windows can't be resized up into.
+    // The fixed top menu bar is a wall windows can't be resized up into.
     let menubar = document.querySelector(".menubar");
     function menubarBottom() {
         return menubar ? menubar.getBoundingClientRect().bottom : -Infinity;
@@ -79,7 +77,6 @@
         }
         let ret = origResize.call(this, w, h, c);
         this._collPrev = rectOf(this);
-      
         return ret;
     };
 
