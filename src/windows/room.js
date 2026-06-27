@@ -474,6 +474,10 @@
             log("Saving room!");
             let path = GMF.getRoomDataPath(roomData["%Name"]);
             Engine.fileWriteText(path, JSON.stringify(roomData));
+            // the room file changed, so its cached thumbnail is now stale
+            if (window.RoomPicker != null && RoomPicker.invalidateThumbnail != null) {
+                RoomPicker.invalidateThumbnail(roomData["%Name"]);
+            }
         }
 
         if (e.key == "]") {

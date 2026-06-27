@@ -8,7 +8,62 @@
     let thumbObserver = null;
     const MAX_CONCURRENT_THUMBS = 3;
 
+    // Persistent thumbnail cache
+    const THUMB_CACHE_FILE = "roomthumbnails.json";
+    let thumbCacheLoaded = false;
+    let saveTimer = null;
+
     let RoomPicker = {};
+
+    function ensureThumbCacheLoaded(callback) {
+        if (thumbCacheLoaded) { callback(); return; }
+        Engine.fileExists(THUMB_CACHE_FILE, (exists) => {
+            if (!exists) { thumbCacheLoaded = true; callback(); return; }
+            Engine.fileReadText(THUMB_CACHE_FILE, (text) => {
+                try {
+                    let data = JSON.parse(text);
+                    // only reuse the cache if it was built for the project we have open now
+                    if (data != null && data.projectPath === GMF.projectPath && data.thumbs != null) {
+                        Object.assign(thumbnailCache, data.thumbs);
+                    }
+                } catch (e) {
+                    console.error("couldn't parse thumbnail cache", e);
+                }
+                thumbCacheLoaded = true;
+                callback();
+            });
+        });
+    }
+
+    function writeThumbCache() {
+        Engine.fileWriteText(THUMB_CACHE_FILE, JSON.stringify({
+            projectPath: GMF.projectPath,
+            thumbs: thumbnailCache
+        }));
+    }
+
+    // debounced
+    function scheduleSaveThumbCache() {
+        if (saveTimer != null) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => { saveTimer = null; writeThumbCache(); }, 1500);
+    }
+
+    function flushThumbCache() {
+        if (saveTimer == null) return;
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        writeThumbCache();
+    }
+
+    // drop a room's cached thumbnail so it regenerates
+    RoomPicker.invalidateThumbnail = function(room) {
+        if (thumbnailCache[room] != null) {
+            delete thumbnailCache[room];
+            scheduleSaveThumbCache();
+        }
+    };
+
+    window.addEventListener("beforeunload", flushThumbCache);
 
     function openWindow() {
         if (open) return;
@@ -21,6 +76,7 @@
             onclose: () => {
                 open = false;
                 Settings.saveWindowOpen("roompicker", false);
+                flushThumbCache();
             },
             x:size.x,
             y:size.y,
@@ -38,9 +94,12 @@
         let roomPicker = document.querySelector("#roompickerlist");
         roomPicker.innerHTML = "";
 
-        GMF.listRooms((rooms) => {
-            cachedRooms = rooms;
-            buildList(rooms, document.querySelector("#roompickerfilter").value);
+        // load the on-disk cache first so cached thumbnails show instantly without re-rendering
+        ensureThumbCacheLoaded(() => {
+            GMF.listRooms((rooms) => {
+                cachedRooms = rooms;
+                buildList(rooms, document.querySelector("#roompickerfilter").value);
+            });
         });
     }
     RoomPicker.openWindow = openWindow;
@@ -135,6 +194,7 @@
                     RoomThumbnail.render(data, 128, (url) => {
                         if (url != null) {
                             thumbnailCache[room] = url;
+                            scheduleSaveThumbCache();
                             if (img.isConnected) img.src = url;
                         }
                         finishOne();
