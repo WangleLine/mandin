@@ -2,7 +2,9 @@
     let open = false;
     let winbox = null;
     let cachedRooms = null;
-    let thumbnailCache = {};
+    let thumbnailCache = {};   // room -> dataURL
+    let thumbnailHashes = {};  // room -> content hash of the .yy it was rendered from
+    let verified = {};         // room -> true once its hash has been checked this session
     let thumbQueue = [];
     let activeThumbs = 0;
     let thumbObserver = null;
@@ -15,6 +17,26 @@
 
     let RoomPicker = {};
 
+    // cyrb53 fast 53-bit non-crypto hash
+    function cyrb53(str) {
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0, ch; i < str.length; i++) {
+            ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+        h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+        h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    }
+
+    // fingerprint of a room's content... parse+stringify normalises away pure formatting/whitespace changes
+    function roomHash(roomData) {
+        return cyrb53(JSON.stringify(roomData));
+    }
+
     function ensureThumbCacheLoaded(callback) {
         if (thumbCacheLoaded) { callback(); return; }
         Engine.fileExists(THUMB_CACHE_FILE, (exists) => {
@@ -23,8 +45,14 @@
                 try {
                     let data = JSON.parse(text);
                     // only reuse the cache if it was built for the project we have open now
-                    if (data != null && data.projectPath === GMF.projectPath && data.thumbs != null) {
-                        Object.assign(thumbnailCache, data.thumbs);
+                    if (data != null && data.projectPath === GMF.projectPath && data.rooms != null) {
+                        for (let name in data.rooms) {
+                            let entry = data.rooms[name];
+                            if (entry != null && entry.url != null) {
+                                thumbnailCache[name] = entry.url;
+                                thumbnailHashes[name] = entry.hash;
+                            }
+                        }
                     }
                 } catch (e) {
                     console.error("couldn't parse thumbnail cache", e);
@@ -36,9 +64,13 @@
     }
 
     function writeThumbCache() {
+        let rooms = {};
+        for (let name in thumbnailCache) {
+            rooms[name] = { url: thumbnailCache[name], hash: thumbnailHashes[name] };
+        }
         Engine.fileWriteText(THUMB_CACHE_FILE, JSON.stringify({
             projectPath: GMF.projectPath,
-            thumbs: thumbnailCache
+            rooms: rooms
         }));
     }
 
@@ -57,13 +89,42 @@
 
     // drop a room's cached thumbnail so it regenerates
     RoomPicker.invalidateThumbnail = function(room) {
-        if (thumbnailCache[room] != null) {
+        if (thumbnailCache[room] != null || thumbnailHashes[room] != null) {
             delete thumbnailCache[room];
+            delete thumbnailHashes[room];
+            delete verified[room];
             scheduleSaveThumbCache();
         }
     };
 
+    // Re-render a room's thumbnail rgiht now from in-memory data (used after an in-editor save) so the preview updates live
+    RoomPicker.updateThumbnail = function(room, roomData) {
+        let hash = roomHash(roomData);
+        RoomThumbnail.render(roomData, 128, (url) => {
+            if (url == null) return;
+            thumbnailCache[room] = url;
+            thumbnailHashes[room] = hash;
+            verified[room] = true;
+            scheduleSaveThumbCache();
+            for (let img of document.querySelectorAll("#roompickerlist .roomthumb")) {
+                if (img.dataset.room === room) { img.src = url; break; }
+            }
+        });
+    };
+
     window.addEventListener("beforeunload", flushThumbCache);
+
+    // Coming back to the app (alt-tabbing back from GameMaker) re-arms the hash check
+    window.addEventListener("focus", () => {
+        if (!open) return;
+        verified = {};
+        if (thumbObserver != null) { thumbObserver.disconnect(); thumbObserver = null; }
+        thumbQueue = [];
+        let observer = getThumbObserver();
+        for (let img of document.querySelectorAll("#roompickerlist .roomthumb")) {
+            observer.observe(img);
+        }
+    });
 
     function openWindow() {
         if (open) return;
@@ -140,12 +201,12 @@
         img.dataset.room = room;
         option.insertBefore(img, option.firstChild);
 
+        // show the cached thumbnail instantly if we have one...
         if (thumbnailCache[room] != null) {
             img.src = thumbnailCache[room];
-            return;
         }
-
-        // Only build a thumbnail once the entry actually scrolls into view
+        // ...but still observe it: once it scrolls into view we hash-check the room file
+        // (to catch edits made in GameMaker) and regenerate if it's missing or stale.
         getThumbObserver().observe(img);
     }
 
@@ -163,7 +224,11 @@
     }
 
     function enqueueThumb(img, room) {
-        if (thumbnailCache[room] != null) { img.src = thumbnailCache[room]; return; }
+        // already hash-checked this session - just make sure the cached image is shown
+        if (verified[room]) {
+            if (thumbnailCache[room] != null) img.src = thumbnailCache[room];
+            return;
+        }
         thumbQueue.push({ img: img, room: room });
         pumpThumbs();
     }
@@ -189,11 +254,23 @@
         let timer = setTimeout(finishOne, 10000);
 
         try {
+            // getRoomData reads the .yy fresh from disk, so this picks up GameMaker edits
             GMF.getRoomData(room, (data) => {
                 try {
+                    let hash = roomHash(data);
+                    verified[room] = true;
+
+                    // cached thumbnail still matches the file on disk - nothing to do
+                    if (thumbnailCache[room] != null && thumbnailHashes[room] === hash) {
+                        finishOne();
+                        return;
+                    }
+
+                    // missing or stale (edited in GameMaker) - (re)render
                     RoomThumbnail.render(data, 128, (url) => {
                         if (url != null) {
                             thumbnailCache[room] = url;
+                            thumbnailHashes[room] = hash;
                             scheduleSaveThumbCache();
                             if (img.isConnected) img.src = url;
                         }
