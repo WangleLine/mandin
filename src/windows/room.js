@@ -513,6 +513,9 @@
             if (e.key == "ArrowDown") { moveSelectedInstances(0, Layers.currentLayer.gridY); }
         }
 
+        // kinda hacky fix for windows grabbing focus for the window menu on just hitting alt
+        if (e.key == "Alt") e.preventDefault();
+
         if (Layers.onInstanceLayer() && e.key == "Alt") {
             holdingAltToPreviewInstancePlacement = true;
         }
@@ -520,6 +523,7 @@
 
     window.addEventListener("keyup", (e) => {
         if (e.key == "Alt") {
+            e.preventDefault();
             holdingAltToPreviewInstancePlacement = false;
         }
     });
