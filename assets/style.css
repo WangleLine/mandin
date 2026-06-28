@@ -151,6 +151,11 @@ input.pickerfilter {
     font-size: 1em;
 }
 
+input.pickerfilter::placeholder {
+    color: #666;
+    opacity: 1;
+}
+
 div.picker {
     display:flex;
     flex-direction: column;
