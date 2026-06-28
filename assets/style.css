@@ -257,3 +257,30 @@ div.wb#textinput {
 div.wb#textinput input {
     flex-shrink: 1;
 }
+
+/* scrollbarsssss*/
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--main-color);
+    border: 2px solid var(--dark-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #f1d05b;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #ffe27a;
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--dark-color);
+}
