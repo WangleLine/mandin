@@ -34,6 +34,21 @@
         dest.drawImage(src, ix * tileWidth, iy * tileHeight, tileWidth, tileHeight, x * tileWidth, y * tileHeight, tileWidth, tileHeight);
     }
 
+    // alpha from a GM instance's ABGR colour
+    Util.instanceAlpha = function(inst) {
+        return inst.colour != null ? ((inst.colour >>> 24) & 0xFF) / 255 : 1;
+    }
+
+    // draws a GM room instance with its WHOLE transform
+    Util.drawInstance = function(ctx, img, spriteData, inst) {
+        ctx.save();
+        ctx.globalAlpha = Util.instanceAlpha(inst);
+        ctx.translate(inst.x, inst.y);
+        ctx.rotate(-(inst.rotation || 0) * Math.PI / 180);
+        ctx.scale(inst.scaleX, inst.scaleY);
+        ctx.drawImage(img, -spriteData.sequence.xorigin, -spriteData.sequence.yorigin, spriteData.width, spriteData.height);
+        ctx.restore();
+    }
     Util.abgrToRGBA = function(abgr) {
         let r = ((abgr) % 0x100).toString(16);
         let g = (Math.floor(abgr / 0x100) % 0x100).toString(16);

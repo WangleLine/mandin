@@ -79,13 +79,7 @@
             for (let inst of layer.instances) {
                 GMF.getObjectSprite(inst.objectId.name, (sprite_data) => {
                     Util.loadImage(sprite_data.img_path, (img) => {
-                        ctx.drawImage(
-                            img, 
-                            inst.x - sprite_data.data.sequence.xorigin, 
-                            inst.y - sprite_data.data.sequence.yorigin,
-                            sprite_data.data.width * inst.scaleX,
-                            sprite_data.data.height * inst.scaleY
-                        );
+                        Util.drawInstance(ctx, img, sprite_data.data, inst);
                     })
                 });
             }
