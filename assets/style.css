@@ -189,6 +189,8 @@ div.pickerlist {
 
 #roomViewer {
     flex-grow: 1;
+    min-width: 0;   /* reload button  tracking the right edge on resize */
+    overflow: hidden;
 }
 
 #roomViewer canvas {
