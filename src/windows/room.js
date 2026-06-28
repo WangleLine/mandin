@@ -117,6 +117,8 @@
         if (outctx != null) {
             lastTransform = outctx.getTransform();
         }
+        // only keep the current view when reloading the same room, otherwise do zoomerrr
+        let sameRoom = roomData != null && roomData["%Name"] === _roomData["%Name"];
         Layers.buildList(_roomData);
 
         roomData = _roomData;
@@ -166,11 +168,11 @@
             outputCanvas.height = outputCanvas.parentElement.clientHeight;
             outctx.imageSmoothingEnabled = false;
         }
-        if (lastTransform != null) {
+        if (lastTransform != null && sameRoom) {
             outctx.setTransform(lastTransform);
             pendingFit = false;
         } else {
-            // zoom so the room almsot fills the view on first mandin load
+            // zoom so the room almsot fills the view
             pendingFit = true;
             fitRoomToView();
         }
