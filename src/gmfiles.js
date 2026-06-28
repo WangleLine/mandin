@@ -97,6 +97,7 @@
     function getAssetData(asset, callback) {
         let path = getResourcePath(asset);
         if (path == null) {
+            console.warn("GMF.getAssetData: '" + asset + "' is not in the project, skipping");
             return;
         }
         cachedTextRead(path, (data) => {
