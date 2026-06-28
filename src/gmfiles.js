@@ -24,6 +24,15 @@
         });
     }
 
+    // the .yyp loads asynchronously, let callers wait for it
+    let ready = false;
+    let readyCallbacks = [];
+    function onReady(callback) {
+        if (ready) { callback(); return; }
+        readyCallbacks.push(callback);
+    }
+    GMF.onReady = onReady;
+
     function setProjectPath(_projectPath)
     {
         log("setting project path: "+_projectPath);
@@ -39,6 +48,8 @@
         Engine.fileReadText(GMF.projectPath, (data) => {
             log("Loaded project data");
             GMF.projectData = yypParse(data);
+            ready = true;
+            while (readyCallbacks.length > 0) readyCallbacks.shift()();
             console.log(GMF.projectData);
         });
     }
@@ -56,15 +67,23 @@
     }
     GMF.listRooms = listRooms;
 
-    function listObjects(callback) {
-        Engine.listFilesInDir(GMF.projectDirectory+"objects/", (list) => {
+    function listResourceNames(folder, callback) {
+        onReady(() => {
+            let prefix = folder + "/";
             let names = [];
-            let sl = (GMF.projectDirectory+"objects/").length;
-            for (let opath of list) {
-                names.push(opath.substring(sl));
+            for (let r of GMF.projectData.resources) {
+                if (r.id != null && typeof r.id.path === "string" && r.id.path.startsWith(prefix)) {
+                    names.push(r.id.name);
+                }
             }
+            names.sort();
             callback(names);
         });
+    }
+    GMF.listResourceNames = listResourceNames;
+
+    function listObjects(callback) {
+        listResourceNames("objects", callback);
     }
     GMF.listObjects = listObjects;
 
@@ -76,8 +95,10 @@
     GMF.getResourcePath = getResourcePath;
 
     function getAssetData(asset, callback) {
-        path = getResourcePath(asset);
-        if (path == null) {log("fucxked up! truna get "+asset); return;}
+        let path = getResourcePath(asset);
+        if (path == null) {
+            return;
+        }
         cachedTextRead(path, (data) => {
             callback(yypParse(data));
         });
