@@ -106,6 +106,21 @@
     }
     GMF.getAssetData = getAssetData;
 
+    // like getObjectSprite but for a sprite resource straight up (asset-layer decals use this!)
+    function getSprite(sprite, callback) {
+        let spritePath = getResourcePath(sprite);
+        if (spritePath == null) {
+            console.warn("GMF.getSprite: '" + sprite + "' is not in the project, skipping");
+            return;
+        }
+        let dir = spritePath.substring(0, spritePath.lastIndexOf("/") + 1);
+        cachedTextRead(spritePath, (data) => {
+            data = yypParse(data);
+            callback({ data: data, img_path: dir + data.frames[0].name + ".png" });
+        });
+    }
+    GMF.getSprite = getSprite;
+
     function getObjectSprite(object, callback) {
         getAssetData(object, (data) => {
             if (data.spriteId == null) return;

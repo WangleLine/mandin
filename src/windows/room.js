@@ -85,6 +85,19 @@
             }
         }
 
+        // asset layers aka the decalsssss
+        if (layer["$GMRAssetLayer"] != null) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            for (let asset of layer.assets) {
+                if (asset["$GMRSpriteGraphic"] == null || asset.spriteId == null) continue;
+                GMF.getSprite(asset.spriteId.name, (sprite_data) => {
+                    Util.loadImage(sprite_data.img_path, (img) => {
+                        Util.drawInstance(ctx, img, sprite_data.data, asset);
+                    })
+                });
+            }
+        }
+
         if (layer["$GMRBackgroundLayer"] != null) {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             ctx.fillStyle = Util.abgrToRGBA(layer.colour);

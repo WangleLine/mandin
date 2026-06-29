@@ -140,6 +140,27 @@
                 });
             }
 
+            // asset-layer sprite graphics (decals)
+            if (layer["$GMRAssetLayer"] != null && layer.assets != null) {
+                let cap = Math.min(layer.assets.length, 500);
+                for (let k = 0; k < cap; k++) {
+                    let asset = layer.assets[k];
+                    if (asset["$GMRSpriteGraphic"] == null || asset.spriteId == null) continue;
+                    cmds.push(null);
+                    let slot = cmds.length - 1;
+                    pending += 1;
+                    GMF.getSprite(asset.spriteId.name, (sprite_data) => {
+                        Util.loadImage(sprite_data.img_path, (img) => {
+                            cmds[slot] = {
+                                bounds: Util.instanceBounds(sprite_data.data, asset),
+                                draw: (ctx) => { Util.drawInstance(ctx, img, sprite_data.data, asset); }
+                            };
+                            done();
+                        });
+                    });
+                }
+            }
+
             if (layer["$GMRInstanceLayer"] != null) {
                 let count = Math.min(layer.instances.length, 500); // don't choke on huge rooms
                 for (let k = 0; k < count; k++) {
