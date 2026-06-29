@@ -114,6 +114,9 @@
             drawNineSlice(ctx, img, ns, w, h,
                 -spriteData.sequence.xorigin * ax, -spriteData.sequence.yorigin * ay,
                 w * ax, h * ay);
+        } else {
+            ctx.scale(inst.scaleX, inst.scaleY);
+            ctx.drawImage(img, -spriteData.sequence.xorigin, -spriteData.sequence.yorigin, spriteData.width, spriteData.height);
         }
         ctx.restore();
     }
