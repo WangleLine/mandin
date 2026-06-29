@@ -159,13 +159,9 @@
                     pending += 1;
                     GMF.getObjectSprite(inst.objectId.name, (sprite_data) => {
                         Util.loadImage(sprite_data.img_path, (img) => {
-                            let dx = inst.x - sprite_data.data.sequence.xorigin;
-                            let dy = inst.y - sprite_data.data.sequence.yorigin;
-                            let dw = sprite_data.data.width * inst.scaleX;
-                            let dh = sprite_data.data.height * inst.scaleY;
                             cmds[slot] = {
-                                bounds: rectBounds(dx, dy, dw, dh),
-                                draw: (ctx) => { ctx.drawImage(img, dx, dy, dw, dh); }
+                                bounds: Util.instanceBounds(sprite_data.data, inst),
+                                draw: (ctx) => { Util.drawInstance(ctx, img, sprite_data.data, inst); }
                             };
                             done();
                         });
