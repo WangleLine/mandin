@@ -49,6 +49,32 @@
         ctx.drawImage(img, -spriteData.sequence.xorigin, -spriteData.sequence.yorigin, spriteData.width, spriteData.height);
         ctx.restore();
     }
+
+    // axis-aligned bounding box of the instance after transform
+    Util.instanceBounds = function(spriteData, inst) {
+        let ox = spriteData.sequence.xorigin, oy = spriteData.sequence.yorigin;
+        let w = spriteData.width, h = spriteData.height;
+        let sx = inst.scaleX, sy = inst.scaleY;
+        let rad = -(inst.rotation || 0) * Math.PI / 180;
+        let cos = Math.cos(rad), sin = Math.sin(rad);
+        let corners = [
+            [-ox * sx, -oy * sy],
+            [(w - ox) * sx, -oy * sy],
+            [(w - ox) * sx, (h - oy) * sy],
+            [-ox * sx, (h - oy) * sy]
+        ];
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let c of corners) {
+            let rx = c[0] * cos - c[1] * sin + inst.x;
+            let ry = c[0] * sin + c[1] * cos + inst.y;
+            if (rx < minX) minX = rx;
+            if (ry < minY) minY = ry;
+            if (rx > maxX) maxX = rx;
+            if (ry > maxY) maxY = ry;
+        }
+        return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+    }
+
     Util.abgrToRGBA = function(abgr) {
         let r = ((abgr) % 0x100).toString(16);
         let g = (Math.floor(abgr / 0x100) % 0x100).toString(16);
