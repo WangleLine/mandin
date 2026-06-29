@@ -1,16 +1,6 @@
 (function() {
     let RoomThumbnail = {};
 
-    function rectBounds(x, y, w, h) {
-        // normalise so negative width/height (flipped sprites) still give a valid box
-        return {
-            minX: Math.min(x, x + w),
-            minY: Math.min(y, y + h),
-            maxX: Math.max(x, x + w),
-            maxY: Math.max(y, y + h)
-        };
-    }
-
     // Decompresses a tile layer into a draw command + the pixel bounds of its non-empty tiles (so empty rows/columns can be cropped out of the thumbnail)
     function buildTileCommand(layer, tileset_data, tileset_image) {
         let tiles = layer.tiles["TileCompressedData"];
