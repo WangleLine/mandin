@@ -39,14 +39,82 @@
         return inst.colour != null ? ((inst.colour >>> 24) & 0xFF) / 255 : 1;
     }
 
-    // draws a GM room instance with its WHOLE transform
+    // draws one little slice region
+  // mode 0=stretch, 1=repeat, 2=mirror, 3=blank-repeat, 4=hide
+    function nineSliceRegion(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, mode) {
+        if (sw <= 0 || sh <= 0 || dw <= 0 || dh <= 0) return;
+        if (mode === 0) { ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh); return; } // stretch
+        if (mode === 3 || mode === 4) return; // blank-repeat / hide -> draw nothin
+        // repeat (1) or mirror (2): tile the source at native size, clipped to the region.
+        // mirror flips every other tile so the seams line up nicelyyy
+        let mirror = mode === 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(dx, dy, dw, dh);
+        ctx.clip();
+        let row = 0;
+        for (let ty = 0; ty < dh; ty += sh, row++) {
+            let col = 0;
+            for (let tx = 0; tx < dw; tx += sw, col++) {
+                let fx = (mirror && col % 2 === 1) ? -1 : 1;
+                let fy = (mirror && row % 2 === 1) ? -1 : 1;
+                if (fx === 1 && fy === 1) {
+                    ctx.drawImage(img, sx, sy, sw, sh, dx + tx, dy + ty, sw, sh);
+                } else {
+                    ctx.save();
+                    ctx.translate(dx + tx + (fx < 0 ? sw : 0), dy + ty + (fy < 0 ? sh : 0));
+                    ctx.scale(fx, fy);
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                    ctx.restore();
+                }
+            }
+        }
+        ctx.restore();
+    }
+
+    // GM nine-slice :3
+     // fill the dx,dy,W,H rect, keep the corners crisp at native size,
+    // stretch/tile the edges + center per the sprite's tileMode (left,top,right,bottom,centre)
+    function drawNineSlice(ctx, img, ns, w, h, dx, dy, W, H) {
+        let L = Math.max(0, Math.min(ns.left, w));
+        let R = Math.max(0, Math.min(ns.right, w - L));
+        let T = Math.max(0, Math.min(ns.top, h));
+        let B = Math.max(0, Math.min(ns.bottom, h - T));
+        let tm = ns.tileMode || [0, 0, 0, 0, 0];
+        let scw = w - L - R, sch = h - T - B;                 // source centre size
+        let dcw = Math.max(0, W - L - R), dch = Math.max(0, H - T - B); // dest centre size (corners stay native!)
+
+        // the four corners, always drawn 1:1 - no stretchy business
+        nineSliceRegion(ctx, img, 0,     0,     L, T, dx,         dy,         L, T, 0);
+        nineSliceRegion(ctx, img, w - R, 0,     R, T, dx + W - R, dy,         R, T, 0);
+        nineSliceRegion(ctx, img, 0,     h - B, L, B, dx,         dy + H - B, L, B, 0);
+        nineSliceRegion(ctx, img, w - R, h - B, R, B, dx + W - R, dy + H - B, R, B, 0);
+        // edges
+        nineSliceRegion(ctx, img, L,     0,     scw, T, dx + L,     dy,         dcw, T,   tm[1]); // top
+        nineSliceRegion(ctx, img, L,     h - B, scw, B, dx + L,     dy + H - B, dcw, B,   tm[3]); // bottom
+        nineSliceRegion(ctx, img, 0,     T,     L, sch, dx,         dy + T,     L,   dch, tm[0]); // left
+        nineSliceRegion(ctx, img, w - R, T,     R, sch, dx + W - R, dy + T,     R,   dch, tm[2]); // right
+        // centre - the bit warning stripes care about!!
+        nineSliceRegion(ctx, img, L,     T,     scw, sch, dx + L,   dy + T,     dcw, dch, tm[4]);
+    }
+
+    // draws a GM room instance with its WHOLE transform (and nine-slice, if the sprite uses it)
     Util.drawInstance = function(ctx, img, spriteData, inst) {
+        let ns = spriteData.nineSlice;
         ctx.save();
         ctx.globalAlpha = Util.instanceAlpha(inst);
         ctx.translate(inst.x, inst.y);
         ctx.rotate(-(inst.rotation || 0) * Math.PI / 180);
-        ctx.scale(inst.scaleX, inst.scaleY);
-        ctx.drawImage(img, -spriteData.sequence.xorigin, -spriteData.sequence.yorigin, spriteData.width, spriteData.height);
+        if (ns != null && ns.enabled) {
+            // keep the corners crispyyy and tile/stretch the rest to fill the scaled size. flips
+            // use a sign-only scale so the slicing maths stays in happy positive space
+            let ax = Math.abs(inst.scaleX), ay = Math.abs(inst.scaleY);
+            let w = spriteData.width, h = spriteData.height;
+            ctx.scale(inst.scaleX < 0 ? -1 : 1, inst.scaleY < 0 ? -1 : 1);
+            drawNineSlice(ctx, img, ns, w, h,
+                -spriteData.sequence.xorigin * ax, -spriteData.sequence.yorigin * ay,
+                w * ax, h * ay);
+        }
         ctx.restore();
     }
 
