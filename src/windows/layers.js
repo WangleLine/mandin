@@ -43,6 +43,7 @@
     function buildList(roomData) {
         let layers = roomData.layers;
         Layers.currentLayer = null;
+        if (window.vlog) vlog("building layer list (" + layers.length + " layers)");
 
         openWindow();
         let layersElement = document.querySelector("#layerlist");
@@ -58,6 +59,7 @@
             option.id = i;
             option.innerText = layers[i]["%Name"];
             option.onclick = () => {
+                vlog("layer clicked: " + layers[i]["%Name"]);
                 setHighlight(i);
                 Settings.saveValue("lastLayer", layers[i]["%Name"]);
                 Layers.currentLayer = layers[i];

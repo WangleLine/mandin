@@ -267,6 +267,7 @@
                     }
 
                     // missing or stale (edited in GameMaker) - (re)render
+                    vlog("regenerating thumbnail: " + room);
                     RoomThumbnail.render(data, 128, (url) => {
                         if (url != null) {
                             thumbnailCache[room] = url;
@@ -288,6 +289,7 @@
     }
 
     function setHighlight(id) {
+        vlog("room picked: " + id);
         let elements = document.querySelectorAll("#roompickerlist .listOption");
         for (var el of elements) {
             el.setAttribute("selected", el.id == id?"true":"false");

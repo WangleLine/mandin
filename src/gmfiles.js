@@ -26,6 +26,7 @@
         }
 
         pendingReads[path] = [callback];
+        if (window.vlog) vlog("reading file (cache miss): " + path);
         Engine.fileReadText(path, (data) => {
             textCache[path] = data;
             let waiting = pendingReads[path];
@@ -147,6 +148,7 @@
 
     function getRoomData(room, callback) {
         console.log(getRoomDataPath(room));
+        if (window.vlog) vlog("reading room file: " + room);
         Engine.fileReadText(getRoomDataPath(room), (data) => {
             callback(yypParse(data));
         });

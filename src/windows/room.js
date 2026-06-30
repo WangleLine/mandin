@@ -130,9 +130,11 @@
 
         roomData = _roomData;
         let layers = roomData.layers;
-        
+
         let width = roomData.roomSettings.Width;
         let height = roomData.roomSettings.Height;
+
+        vlog("loadRoom: " + roomData["%Name"] + " (" + width + "x" + height + ", " + layers.length + " layers, sameRoom=" + sameRoom + ")");
 
         rv.innerHTML = "";
         roomLayers = [];
@@ -329,6 +331,7 @@
     }
 
     function reload() {
+        vlog("reloading room " + roomData["%Name"] + " from disk");
         let transform = outctx.getTransform();
         GMF.getRoomData(roomData["%Name"], (data) => {
             Layers.buildList(data);
@@ -382,6 +385,7 @@
         if (e.button == 0) {
             if (Layers.onTileLayer()) {
                 painting = true;
+                vlog("paint stroke start (brush " + brushSize + ") on " + Layers.currentLayer["%Name"]);
                 Undo.beginSubstack();
                 let off = Math.floor(brushSize/2);
                 for (let i = 0; i < brushSize; i++) {
@@ -425,6 +429,7 @@
         if (e.button == 2) {
             deleting = true;
             if (Layers.onTileLayer()) {
+                vlog("erase stroke start (brush " + brushSize + ") on " + Layers.currentLayer["%Name"]);
                 Undo.beginSubstack();
                 let off = Math.floor(brushSize/2);
                 for (let i = 0; i < brushSize; i++) {
@@ -486,6 +491,7 @@
 
     function onLayerSwitch() {
         instances = [];
+        vlog("active layer: " + (Layers.currentLayer ? Layers.currentLayer["%Name"] : "(none)"));
         if (Layers.onInstanceLayer()) {
             for (let inst of Layers.currentLayer.instances) {
                 GMF.getObjectSprite(inst.objectId.name, (sprite_data) => {
@@ -508,6 +514,7 @@
         if(e.ctrlKey && e.key == "s") {
             log("Saving room!");
             let path = GMF.getRoomDataPath(roomData["%Name"]);
+            vlog("saving " + roomData["%Name"] + " -> " + path);
             Engine.fileWriteText(path, JSON.stringify(roomData));
             // refresh this room's cached thumbnail from what we just saved
             if (window.RoomPicker != null && RoomPicker.updateThumbnail != null) {
@@ -540,6 +547,7 @@
                     }
                     if (creationIndex != -1) roomData.instanceCreationOrder.splice(creationIndex, 1);
                 }
+                vlog("deleted " + instanceSelection.length + " instance(s) from " + Layers.currentLayer["%Name"]);
                 instanceSelection = [];
                 reRenderCurrentLayer();
                 onLayerSwitch();
@@ -639,6 +647,7 @@
             name: instanceName,
             path: `rooms/${roomData.name}/${roomData.name}.yy`
         });
+        vlog("placed " + object + " (" + instanceName + ") at " + x + "," + y + " on " + layer["%Name"]);
         
     }
 

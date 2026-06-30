@@ -34,6 +34,7 @@
 
     let highlight = null;
     function loadTileset(tileset) {
+        vlog("loading tileset: " + tileset);
         openWindow();
         GMF.getObjectSprite(tileset, (sprite_data) => {
             Util.loadImage(sprite_data.img_path, (img) => {
@@ -90,6 +91,7 @@
                                 hctx.clearRect(0, 0, tiles_per_row, tiles_per_column);
                                 hctx.fillRect(tx, ty, 1, 1);
                             }
+                            vlog("tile brush: " + TilePicker.currentTiles.length + " tile(s) selected");
                         });
 
                         window.addEventListener("mouseup", (e) => {

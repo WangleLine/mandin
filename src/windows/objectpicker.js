@@ -53,6 +53,7 @@
 
     function setHighlight(id) {
         selectedObject = id;
+        vlog("object selected: " + id);
 
         // update room viewer preview
         GMF.getObjectSprite(selectedObject, (sprite_data) => {

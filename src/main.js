@@ -1,8 +1,9 @@
 Engine.setIcon("assets/icon.png");
 
 function loadProject(projectPath) {
+    vlog("loadProject: " + projectPath);
     GMF.setProjectPath(projectPath);
-        
+
     if (Settings.getWindowOpen("objectpicker")) setTimeout(() => { ObjectPicker.openWindow(); }, 50 + Math.random() * 200);
     if (Settings.getWindowOpen("roompicker")) setTimeout(() => { RoomPicker.openWindow(); }, 50 + Math.random() * 200);
     if (Settings.getWindowOpen("log")) setTimeout(() => { openLog(); }, 50 + Math.random() * 200);
