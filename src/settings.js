@@ -16,6 +16,7 @@
 
     function saveValue(key, value)
     {
+        if (settings == null) settings = {};
         settings[key] = value;
         Engine.fileWriteText("settings.cfg", JSON.stringify(settings));
     }
@@ -23,6 +24,7 @@
 
     function loadValue(key, _default)
     {
+        if (settings == null) return _default; // not loaded yet, dont explode (vlog calls this early!)
         if (settings[key] != null) return settings[key];
         return _default;
     }
