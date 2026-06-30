@@ -3,7 +3,7 @@
 </head>
 
 <div class="menubar">
-    <button id="btn_project_setup">PROJECT SETUP</button><button id="btn_rooms">ROOMS</button><button id="btn_assets">ASSETS</button><button id="btn_log">LOG</button><button id="fill" style="flex-grow:1;">&nbsp;</button>
+    <button id="btn_project_setup">PROJECT SETUP</button><button id="btn_rooms">ROOMS</button><button id="btn_assets">ASSETS</button><button id="btn_log">LOG</button><button id="btn_settings">SETTINGS</button><button id="fill" style="flex-grow:1;">&nbsp;</button>
 </div>
 
 <body>
@@ -44,6 +44,10 @@
         <div class="wb" id="log">
         </div>
 
+        <div class="wb" id="settings">
+            <label class="settingrow"><input type="checkbox" id="setting_verbose"> Verbose logging</label>
+        </div>
+
     </windows>
     
     <script src="lib/winbox.bundle.min.js"></script>
@@ -63,7 +67,8 @@
     <script src="src/windows/objectpicker.js"></script>
     <script src="src/windows/roompicker.js"></script>
     <script src="src/windows/layers.js"></script>
-    
+    <script src="src/windows/settings_window.js"></script>
+
     <script src="src/main.js"></script>
 </body>
 

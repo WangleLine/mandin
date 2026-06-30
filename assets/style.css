@@ -250,6 +250,19 @@ img {
     background-size: contain;
 }
 
+div.wb#settings {
+    color: white;
+    padding: 8px;
+}
+
+.settingrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
 div.wb#textinput {
     display:flex;
 }

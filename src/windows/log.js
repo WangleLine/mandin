@@ -65,4 +65,9 @@
     }
 
     window.openLog = openWindow;
+
+    // verbose log
+    window.vlog = function(message) {
+        if (window.Settings && Settings.loadValue("verbose", false)) log(message);
+    };
 })();
