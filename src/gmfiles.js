@@ -11,6 +11,7 @@
     GMF.yypParse = yypParse;
 
     let textCache = {};
+    let pendingReads = {}; // path -> callbacks waiting on an in-flight read, so we never read the same file twice at once
     function cachedTextRead(path, callback)
     {
         if (textCache[path] != null) {
@@ -18,9 +19,18 @@
             return;
         }
 
+        // a read for this exact file is already in flight! just hop on it instead of reading again
+        if (pendingReads[path] != null) {
+            pendingReads[path].push(callback);
+            return;
+        }
+
+        pendingReads[path] = [callback];
         Engine.fileReadText(path, (data) => {
             textCache[path] = data;
-            callback(data);
+            let waiting = pendingReads[path];
+            delete pendingReads[path];
+            for (let cb of waiting) cb(data);
         });
     }
 
